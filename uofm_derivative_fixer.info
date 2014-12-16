@@ -1,0 +1,6 @@
+name = "UofM Derivative Fixer"
+description = "Fix derivatives not created by normal ingest under batch conditions"
+dependencies[] = islandora
+package = Islandora Local Customization
+version = 7.x-dev
+core = 7.x

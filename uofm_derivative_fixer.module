@@ -1,0 +1,21 @@
+<?php
+
+define('UOFM_DER_FIX_QUEUE', 'uofm_derivative_fixer_queue');
+
+function uofm_derivative_fixer_cron_queue_info() {
+  $queues[UOFM_DER_FIX_QUEUE] = array(
+    'worker callback' => 'uofm_derivative_fixer_process',
+    'time' => 300,
+  );
+  return $queues;
+}
+
+function uofm_derivative_fixer_process ($object){
+  if (is_string($object)) {
+    $obj = islandora_load_object($object);
+    if ($obj) {
+      module_load_include('inc', 'islandora', 'includes/derivatives');
+      islandora_do_derivatives($obj, array('force' => FALSE));
+    }
+  } 
+}
