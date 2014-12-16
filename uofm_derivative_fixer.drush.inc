@@ -66,9 +66,12 @@ function uofm_derivative_fixer_preprocess() {
     }
   }
   $queue = DrupalQueue::get(UOFM_DER_FIX_QUEUE);
+  $count = 0;
   foreach ($results as $obj) {
     if (strlen(trim($obj)) > 0) {
       $queue->createItem($obj);
+      $count += 1;
     }
-  } 
+  }
+  drush_log('Added '. $count . ' items to queue', 'ok');
 }

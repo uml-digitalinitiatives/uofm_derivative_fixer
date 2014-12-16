@@ -12,7 +12,7 @@ function uofm_derivative_fixer_cron_queue_info() {
 
 function uofm_derivative_fixer_process ($object){
   if (is_string($object)) {
-    $obj = islandora_load_object($object);
+    $obj = islandora_object_load($object);
     if ($obj) {
       module_load_include('inc', 'islandora', 'includes/derivatives');
       islandora_do_derivatives($obj, array('force' => FALSE));
