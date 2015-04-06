@@ -27,25 +27,28 @@ function uofm_derivative_fixer_drush_command() {
         'description' => 'Path to a textfile of PIDs to re-index, one per line',
       ),
     ),
-    'aliases' => array('uofm_derivative_pp'),
+    'aliases' => array('uofm_dfp'),
     'callback' => 'uofm_derivative_fixer_preprocess',
     'description' => 'Add a list of objects to a queue to have any missing derivatives generated for.',
-    'drupal dependencies' => array('islandora', 'islandora_solr', 'islandora_collection_search'),
+    'drupal dependencies' => array(
+      'islandora',
+      'islandora_solr',
+      'islandora_collection_search',
+    ),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
   );
   $items['uofm_derivative_fix_run'] = array(
     'options' => array(
       'timeout' => array(
-        'description' => t('How long to run the queue for.'),
+        'description' => t('How long to run the queue for in seconds, otherwise run until queue is empty.'),
       ),
     ),
-    'aliases' => array('uofm_derivative_run'),
+    'aliases' => array('uofm_dfr'),
     'callback' => 'uofm_derivative_fixer_run',
     'description' => 'Run the derivative queue in a batch instead of waiting for cron runs to complete it.',
     'drupal dependencies' => array('islandora'),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
   );
-
 
   return $items;
 }
@@ -65,12 +68,12 @@ function uofm_derivative_fixer_preprocess() {
     $results = __uofm_derivative_fixer_sparql_query($query_param);
   }
   elseif (!is_null(drush_get_option('pid', NULL))) {
-     $results[] = drush_get_option('pid', "");
+    $results[] = drush_get_option('pid', "");
   }
   elseif (!is_null(drush_get_option('pidlist', NULL))) {
     $list = drush_get_option('pidlist', "");
-    $tmpRes = explode($list, ',');
-    foreach ($tmpRes as $t) {
+    $tmp_res = explode(',', $list);
+    foreach ($tmp_res as $t) {
       if (strlen(trim($t)) > 0) {
         $results[] = trim($t);
       }
@@ -99,7 +102,7 @@ function uofm_derivative_fixer_preprocess() {
       drush_set_error("File: " . drush_get_option('pidfile', '') . " does not exist.");
     }
   }
-  $queue = DrupalQueue::get(UOFM_DER_FIX_QUEUE);
+  $queue = DrupalQueue::get(UOFM_DERIVATIVE_FIXER_QUEUE);
   $count = 0;
   foreach ($results as $obj) {
     if (strlen(trim($obj)) > 0 && islandora_is_valid_pid($obj)) {
@@ -107,7 +110,7 @@ function uofm_derivative_fixer_preprocess() {
       $count += 1;
     }
   }
-  drush_log('Added '. $count . ' items to queue', 'ok');
+  drush_log("Added $count items to queue", 'ok');
 }
 
 /**
@@ -143,11 +146,13 @@ function __uofm_derivative_fixer_sparql_query($where) {
  */
 function uofm_derivative_fixer_run() {
   $timeout = drush_get_option('timeout', ini_get('max_execution_time'));
-  $queue = DrupalQueue::get(UOFM_DER_FIX_QUEUE);
-  timer_start(UOFM_DER_FIX_TIMER);
-  while (((timer_read(UOFM_DER_FIX_TIMER)) / 1000) < $timeout && $queue->numberOfItems() > 0) {
+  $queue = DrupalQueue::get(UOFM_DERIVATIVE_FIXER_QUEUE);
+  timer_start(UOFM_DERIVATIVE_FIXER_TIMER);
+  while (($timeout == 0 || (timer_read(UOFM_DERIVATIVE_FIXER_TIMER) / 1000) < $timeout) && $queue->numberOfItems() > 0) {
     $item = $queue->claimItem(300);
     uofm_derivative_fixer_process($item);
     $queue->deleteItem($item);
+    drush_log("Processed object ({$item->data})", "ok");
   }
+  timer_stop(UOFM_DERIVATIVE_FIXER_TIMER);
 }

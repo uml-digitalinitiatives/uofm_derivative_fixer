@@ -1,17 +1,24 @@
 <?php
 /**
- * @file Defines queues and functions
+ * @file
+ *
+ * Defines queues and functions
  */
 
-define('UOFM_DER_FIX_QUEUE', 'uofm_derivative_fixer_queue');
-
-define('UOFM_DER_FIX_TIMER', 'uofm_derivative_fixer_timer')
+/**
+ * Queue constant
+ */
+define('UOFM_DERIVATIVE_FIXER_QUEUE', 'uofm_derivative_fixer_queue');
+/**
+ * Timer constant
+ */
+define('UOFM_DERIVATIVE_FIXER_TIMER', 'uofm_derivative_fixer_timer');
 
 /**
  * Implements hook_cron_queue_info().
  */
 function uofm_derivative_fixer_cron_queue_info() {
-  $queues[UOFM_DER_FIX_QUEUE] = array(
+  $queues[UOFM_DERIVATIVE_FIXER_QUEUE] = array(
     'worker callback' => 'uofm_derivative_fixer_process',
     'time' => 120,
   );
@@ -21,7 +28,7 @@ function uofm_derivative_fixer_cron_queue_info() {
 /**
  * Generate any missing derivatives.
  */
-function uofm_derivative_fixer_process($object){
+function uofm_derivative_fixer_process($object) {
   $obj = FALSE;
   if (is_string($object)) {
     module_load_include('inc', 'islandora', 'includes/utilities');
