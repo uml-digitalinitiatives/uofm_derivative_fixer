@@ -1,21 +1,39 @@
 <?php
+/**
+ * @file Defines queues and functions
+ */
 
 define('UOFM_DER_FIX_QUEUE', 'uofm_derivative_fixer_queue');
 
+define('UOFM_DER_FIX_TIMER', 'uofm_derivative_fixer_timer')
+
+/**
+ * Implements hook_cron_queue_info().
+ */
 function uofm_derivative_fixer_cron_queue_info() {
   $queues[UOFM_DER_FIX_QUEUE] = array(
     'worker callback' => 'uofm_derivative_fixer_process',
-    'time' => 300,
+    'time' => 120,
   );
   return $queues;
 }
 
-function uofm_derivative_fixer_process ($object){
+/**
+ * Generate any missing derivatives.
+ */
+function uofm_derivative_fixer_process($object){
+  $obj = FALSE;
   if (is_string($object)) {
-    $obj = islandora_object_load($object);
-    if ($obj) {
-      module_load_include('inc', 'islandora', 'includes/derivatives');
-      islandora_do_derivatives($obj, array('force' => FALSE));
+    module_load_include('inc', 'islandora', 'includes/utilities');
+    if (islandora_is_valid_pid($object)) {
+      $obj = islandora_object_load($object);
     }
-  } 
+  }
+  if (is_a($object, 'AbstractObject')) {
+    $obj = $object;
+  }
+  if ($obj) {
+    module_load_include('inc', 'islandora', 'includes/derivatives');
+    islandora_do_derivatives($obj, array('force' => FALSE));
+  }
 }
