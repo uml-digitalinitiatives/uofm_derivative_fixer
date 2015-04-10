@@ -150,7 +150,7 @@ function uofm_derivative_fixer_run() {
   timer_start(UOFM_DERIVATIVE_FIXER_TIMER);
   while (($timeout == 0 || (timer_read(UOFM_DERIVATIVE_FIXER_TIMER) / 1000) < $timeout) && $queue->numberOfItems() > 0) {
     $item = $queue->claimItem(300);
-    uofm_derivative_fixer_process($item);
+    uofm_derivative_fixer_process($item->data);
     $queue->deleteItem($item);
     drush_log("Processed object ({$item->data})", "ok");
   }
